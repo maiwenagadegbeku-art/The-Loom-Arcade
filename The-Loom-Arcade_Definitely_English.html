@@ -1,8 +1,17 @@
+<!--
+  The Loom Arcade — Lesson Loom Suite
+  © 2026 Maïwena Gadegbeku — lessonloom.fr
+  Licence : GNU Affero General Public License v3 (AGPLv3)
+  Contact : maiwena.gadegbeku@ac-rennes.fr
+  https://www.gnu.org/licenses/agpl-3.0.html
+-->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Maïwena Gadegbeku">
+<meta name="copyright" content="© 2026 Maïwena Gadegbeku — lessonloom.fr">
 <title>The Loom Arcade</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -707,6 +716,40 @@ function App(){
     const ts=r.reduce((s,x)=>s+x.stars,0);const mx=r.length*3;
     setSessionLog(sl=>[...sl,{gameName:gmeta?.name||"",icon:gmeta?.icon||"",listName:activeList?.name||"",totalStars:ts,maxStars:mx,count:r.length,ts:Date.now()}]);};
   const shareList=list=>{const e=encodeList(list);if(e){const u=window.location.origin+window.location.pathname+"#shared="+e;navigator.clipboard?.writeText(u).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);});}};
+  const downloadList=list=>{
+    // Generate a standalone HTML with the list pre-embedded
+    const listData=JSON.stringify({name:list.name,pairs:list.pairs.map(p=>({l:p.l,r:p.r,id:p.id}))});
+    const encoded=encodeList(list);
+    // Get current page HTML and inject #shared= hash
+    const scriptTags=document.querySelectorAll('script[src]');
+    const reactSrc=Array.from(scriptTags).map(s=>s.src);
+    // Build minimal HTML that loads the same CDNs and embeds the app
+    const pageHtml=document.documentElement.outerHTML;
+    // Simpler approach: just create the page with hash pre-set
+    const blob=new Blob([`<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Loom Arcade - ${list.name}</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',system-ui,sans-serif}#root{min-height:100vh}</style>
+<script>
+// Pre-load the shared list before React boots
+(function(){
+  var data=${JSON.stringify(listData)};
+  if(!window.location.hash||!window.location.hash.includes('shared=')){
+    try{window.history.replaceState(null,'','#shared='+btoa(unescape(encodeURIComponent(data))));}catch(e){window.location.hash='shared='+btoa(unescape(encodeURIComponent(data)));}
+  }
+})();
+<\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"><\/script>
+</head><body><div id="root"></div>
+<script type="text/babel" data-type="module">
+`+document.querySelector('script[type="text/babel"]').textContent+`
+<\/script></body></html>`],{type:"text/html"});
+    const url=URL.createObjectURL(blob);const a=document.createElement("a");
+    a.href=url;a.download=`arcade-${list.name.toLowerCase().replace(/[^a-z0-9]/gi,"-")}.html`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  };
   const gp=filterPairs||(activeList?.pairs||[]);const GC=activeGame?GM[activeGame]:null;const gm=GAMES.find(g=>g.id===activeGame);
   const goHome=()=>{setView("home");setActiveGame(null);setRecapData(null);setFilterPairs(null);setEditList(null);setIsStudent(false);};
 
@@ -745,6 +788,7 @@ function App(){
                 <div style={{display:"flex",gap:8}} onClick={e=>e.stopPropagation()}>
                   <span style={{cursor:"pointer",fontSize:14}} onClick={()=>{setActiveList(l);setIsStudent(true);setView("pick");}} title="Prévisualiser mode élève">👁️</span>
                   <span style={{cursor:"pointer",fontSize:14}} onClick={()=>shareList(l)} title="Copier lien élève">🔗</span>
+                  <span style={{cursor:"pointer",fontSize:14}} onClick={()=>downloadList(l)} title="Télécharger HTML pour les élèves">📥</span>
                   <span style={{cursor:"pointer",fontSize:14}} onClick={()=>setEditList(l)} title="Modifier">✏️</span>
                   <span style={{cursor:"pointer",fontSize:14}} onClick={()=>deleteList(l.id)} title="Supprimer">🗑️</span>
                 </div>
@@ -826,5 +870,6 @@ function App(){
 const rootEl = document.getElementById('root');
 ReactDOM.createRoot(rootEl).render(React.createElement(App));
 </script>
+<div style="text-align:center;font-size:11px;color:#78909c;max-width:680px;margin:20px auto 0;opacity:0.6;padding-bottom:12px;">The Loom Arcade · Lesson Loom Suite © 2026 <a href="mailto:maiwena.gadegbeku@ac-rennes.fr" style="color:inherit;text-decoration:none;transition:color .15s" onmouseover="this.style.color='#2196f3'" onmouseout="this.style.color='inherit'">Maïwena Gadegbeku</a> — Licence AGPLv3</div>
 </body>
 </html>
