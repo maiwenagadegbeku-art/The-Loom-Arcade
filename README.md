@@ -1,8 +1,8 @@
 # 🎮 The Loom Arcade
 
-Outil de jeux de vocabulaire anglais-français pour le secondaire. Un seul fichier HTML, aucune installation, aucun serveur.
+Outil de jeux de vocabulaire anglais-français pour le secondaire. Un seul fichier HTML, aucune installation, aucun serveur à gérer. **Une connexion Internet est nécessaire à l'ouverture** : l'application charge React et Babel depuis un service externe.
 
-Fait partie de l'écosystème [Lesson Loom](https://github.com/your-username/lesson-loom).
+Fait partie de la [Lesson Loom Suite](https://lessonloom.fr).
 
 ![Mario-style sky background with vocabulary games](https://img.shields.io/badge/jeux-9-blue) ![Single HTML file](https://img.shields.io/badge/fichier-unique_HTML-green) ![No server needed](https://img.shields.io/badge/serveur-aucun-orange)
 
@@ -58,6 +58,9 @@ Ouvrir `the-loom-arcade.html` dans un navigateur. C'est tout.
 - Bouton **"Rejouer les ratés"** pour relancer uniquement les mots ≤ 1 étoile
 - **Bilan de session** cumulé (remis à zéro si on quitte la page)
 
+### Guide d'accueil
+Un guide s'affiche au premier lancement côté professeur : créer une liste, jouer, partager par fichier ou par lien, prévisualiser en mode élève. Il ne réapparaît plus ensuite, et reste accessible par le bouton **Guide** de la barre du haut. Les élèves arrivant par un lien partagé ne le voient jamais.
+
 ### Mode prof / élève
 - **Prof** : crée et gère des listes sauvegardées (localStorage), accès à tous les jeux
 - **Élève** : arrive via un lien partagé, voit uniquement les jeux pour cette liste
@@ -66,6 +69,14 @@ Ouvrir `the-loom-arcade.html` dans un navigateur. C'est tout.
 
 ### Partage
 Le lien de partage encode la liste en base64 dans l'URL (`#shared=...`). Aucun serveur, aucune base de données — tout est dans le lien.
+
+---
+
+## Limites
+
+- **Une connexion Internet est nécessaire à chaque ouverture**, y compris pour un fichier téléchargé. Sans connexion, la page reste blanche.
+- **Certains réseaux d'établissement filtrent les services externes** : testez depuis votre poste avant de diffuser à vos élèves.
+- **Au-delà d'une cinquantaine de paires**, le lien de partage devient très long — environ 3 000 caractères pour 50 paires, 6 200 pour 100 — et certaines messageries ou ENT le coupent. Un lien coupé donne une liste vide : préférez alors le fichier téléchargé.
 
 ---
 
