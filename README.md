@@ -107,7 +107,7 @@ Héberger le fichier sur n'importe quel serveur web ou GitHub Pages.
 the-loom-arcade/
 ├── the-loom-arcade.html   ← le fichier unique, prêt à l'emploi
 ├── README.md              ← ce fichier
-└── LICENSE                ← MIT
+└── LICENSE                ← AGPLv3
 ```
 
 ---
@@ -131,8 +131,14 @@ Le fichier est auto-contenu. Pour modifier :
 
 ## Licence
 
-MIT avec clause d'attribution — libre d'utilisation, modification et redistribution, à condition de créditer visiblement l'autrice originale :
+**GNU Affero General Public License v3 (AGPLv3)** — © 2026 Maïwena Gadegbeku
 
-> "Based on The Loom Arcade by Maïwena"
+Vous êtes libre d'utiliser, d'étudier, de modifier et de redistribuer cet outil. En contrepartie, toute version modifiée qui est redistribuée **ou mise à disposition sur un serveur** doit être publiée sous cette même licence, code source compris.
 
-Voir le fichier [LICENSE](LICENSE) pour le texte complet.
+Une condition supplémentaire s'ajoute, au titre de l'article 7(b) : toute version modifiée diffusée publiquement doit créditer visiblement l'autrice originale, dans l'interface ou dans la documentation :
+
+> "Based on The Loom Arcade by Maïwena Gadegbeku"
+
+Ce crédit ne peut être ni retiré, ni dissimulé aux utilisateurs.
+
+Voir le fichier [LICENSE](LICENSE) pour le texte complet, et <https://www.gnu.org/licenses/agpl-3.0.html> pour la licence officielle.
