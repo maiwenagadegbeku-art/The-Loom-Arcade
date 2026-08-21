@@ -4,8 +4,6 @@ Outil de jeux de vocabulaire anglais-français pour le secondaire. Un seul fichi
 
 Fait partie de la [Lesson Loom Suite](https://lessonloom.fr).
 
-![Mario-style sky background with vocabulary games](https://img.shields.io/badge/jeux-9-blue) ![Single HTML file](https://img.shields.io/badge/fichier-unique_HTML-green) ![No server needed](https://img.shields.io/badge/serveur-aucun-orange)
-
 ---
 
 ## Démo
