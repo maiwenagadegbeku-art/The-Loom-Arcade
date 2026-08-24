@@ -42,7 +42,7 @@ Ouvrir `the-loom-arcade.html` dans un navigateur. C'est tout.
 | 🔨 **Whack-a-Word** | Tape la bonne taupe avant qu'elle disparaisse |
 | 🧺 **Word Catcher** | Attrape la bonne traduction française avant qu'elle touche le sol |
 
-Neuf jeux vont du français vers l'anglais. **Word Catcher fait l'inverse** : le mot anglais est affiché, l'élève attrape sa traduction française — un travail de compréhension, quand les autres exercent la production.
+La plupart des jeux demandent de retrouver le mot anglais. **Word Catcher fait l'inverse** : le mot anglais est affiché, l'élève attrape sa traduction française — un travail de compréhension, quand les autres exercent la production.
 
 ---
 
@@ -145,7 +145,6 @@ Le fichier est auto-contenu. Pour modifier :
 ## Crédits
 
 - Design inspiré de l'univers Mario Bros (nuages, tuyaux, couleurs)
-- Créé avec l'aide de Claude (Anthropic)
 
 ---
 
