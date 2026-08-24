@@ -15,8 +15,10 @@ Ouvrir `the-loom-arcade.html` dans un navigateur. C'est tout.
 ## Principe
 
 1. **Le prof** crée des listes de paires (ex: *dog → chien*)
-2. **Le prof** partage un lien vers une liste
-3. **L'élève** ouvre le lien et joue à 10 jeux différents avec cette liste
+2. **Le prof** donne la liste à ses élèves — soit en téléchargeant un fichier qui
+   contient déjà la liste (bouton 📥, la voie la plus sûre), soit en partageant un
+   lien (bouton 🔗)
+3. **L'élève** ouvre le fichier ou le lien et joue à 10 jeux différents avec cette liste
 
 ---
 
@@ -52,12 +54,30 @@ La plupart des jeux demandent de retrouver le mot anglais. **Word Catcher fait l
 - **Collage instantané** : colle une liste depuis Word, Excel, un site… les paires sont détectées automatiquement
 - Séparateurs reconnus : `tab` `;` `:` `→` `=` `–` ou 2+ espaces
 - Saisie manuelle aussi disponible (champ par champ)
+- **Un collage au clavier (`Ctrl+V`) ajoute les paires tout seul.** Si le texte arrive
+  autrement — saisi à la main, glissé, collé par le menu — l'application affiche
+  « ✓ N détectées » mais **il faut cliquer sur « + Ajouter »** pour qu'elles entrent
+  dans la liste. Tant que ce n'est pas fait, le bouton 💾 Sauvegarder reste gris
 
 > **Un conseil sur le côté anglais : préférez un seul mot.**
 >
 > Quatre jeux — Word Guess, Mots mêlés, Vocab Maze et Word Breaker — font construire le mot lettre par lettre. Ils retirent les espaces : `a dog` y devient `ADOG`, et l'élève voit une orthographe qui n'existe pas.
 >
 > Écrivez donc `dog → chien` plutôt que `a dog → un chien`. Pour un verbe à particule ou une expression figée — `get up`, `look after`, `a lot of` — l'espace est inévitable : ces entrées restent parfaites pour Memory, Flashcards, Word Rush, Whack-a-Word, Word Catcher et le pendu, qui les affichent en entier. Évitez simplement de les envoyer aux quatre jeux de lettres.
+
+### Combien de paires par jeu
+
+Chaque jeu a besoin d'un minimum. En dessous, il ne s'affiche pas.
+
+| Minimum | Jeux |
+|---|---|
+| 1 paire | Flashcards, Le pendu, Word Guess, Word Breaker, Vocab Maze |
+| 2 paires | Memory |
+| 3 paires | Mots mêlés, Word Rush, Whack-a-Word |
+| 4 paires | Word Catcher |
+
+**Une dizaine de paires** est un bon format : tous les jeux fonctionnent, et une partie
+tient dans une fin d'heure.
 
 ### Scoring
 - **3 étoiles par mot** (critères adaptés par jeu)
@@ -83,7 +103,15 @@ Un guide s'affiche au premier lancement côté professeur : créer une liste, jo
 - Bouton 🔗 pour copier le lien de partage
 
 ### Partage
-Le lien de partage encode la liste en base64 dans l'URL (`#shared=...`). Aucun serveur, aucune base de données — tout est dans le lien.
+
+**Le fichier (bouton 📥)** — un fichier HTML se télécharge avec votre liste déjà dedans.
+À déposer sur l'ENT, dans le cahier de textes, ou à envoyer par courriel. C'est la voie
+la plus sûre : rien à copier, rien qui puisse être coupé en route. Le fichier obtenu
+n'affiche pas le guide d'accueil, et porte le bandeau **ÉLÈVE**.
+
+**Le lien (bouton 🔗)** — la liste est encodée dans l'adresse elle-même (`#shared=...`).
+Aucun serveur, aucune base de données : tout est dans le lien. Pratique pour une liste
+courte, fragile au-delà (voir Limites).
 
 ---
 
