@@ -627,6 +627,136 @@ function GameWhack({pairs,onFinish}){
 }
 
 /* ─── GAME REGISTRY ─── */
+/* ─── Word Catcher ─── */
+function GameWordCatcher({pairs,onFinish}){
+  const[queue,setQueue]=useState([]);const[cur,setCur]=useState(null);
+  const[items,setItems]=useState([]);const[cart,setCart]=useState(50);
+  const[lives,setLives]=useState(3);const[score,setScore]=useState(0);
+  const[speed,setSpeed]=useState(0.27);const[flash,setFlash]=useState(null);
+  const[done,setDone]=useState(false);const[paused,setPaused]=useState(false);
+  const res=useRef({});const manques=useRef({});const lr=useRef(3);const qr=useRef([]);const cr=useRef(50);
+  const zone=useRef(null);const raf=useRef(null);const last=useRef(0);const idc=useRef(0);
+  const okCount=useRef(0);const spd=useRef(0.27);const items_=useRef([]);const cur_=useRef(null);
+
+  const leurres=useCallback(bon=>{
+    const autres=pairs.filter(p=>p.id!==bon.id);
+    const mel=[...autres].sort(()=>Math.random()-0.5).slice(0,3);
+    const tous=[{p:bon,bon:true},...mel.map(p=>({p,bon:false}))].sort(()=>Math.random()-0.5);
+    return tous.map((t,i)=>({key:++idc.current,texte:t.p.r,bon:t.bon,
+      x:8+i*(84/Math.max(1,tous.length-1)),y:-8-i*26}));
+  },[pairs]);
+
+  const suivant=useCallback(()=>{
+    const q=qr.current;
+    if(q.length===0||lr.current<=0){setDone(true);return;}
+    const n=q.shift();qr.current=q;setQueue([...q]);
+    cur_.current=n;setCur(n);
+    const it=leurres(n);items_.current=it;setItems(it);
+  },[leurres]);
+
+  useEffect(()=>{
+    const m=[...pairs].sort(()=>Math.random()-0.5);
+    qr.current=m;setQueue(m);setTimeout(suivant,300);
+    return()=>{if(raf.current)cancelAnimationFrame(raf.current);};
+  },[]);
+
+  const etoile=(id,v)=>{const r=res.current;r[id]=Math.min(r[id]??99,v);};
+
+  const perdreVie=useCallback(()=>{
+    const nl=lr.current-1;lr.current=nl;setLives(nl);
+    setFlash("rate");setTimeout(()=>setFlash(null),400);
+    if(cur_.current)etoile(cur_.current.id,0);
+    setPaused(true);setTimeout(()=>{setPaused(false);nl<=0?setDone(true):suivant();},600);
+  },[suivant]);
+
+  const attrape=useCallback(()=>{
+    okCount.current++;setScore(s=>s+1);
+    setFlash("ok");setTimeout(()=>setFlash(null),400);
+    if(okCount.current%5===0)spd.current=Math.min(0.68,spd.current+0.05);
+    setSpeed(spd.current);
+    setPaused(true);setTimeout(()=>{setPaused(false);suivant();},500);
+  },[suivant]);
+
+  const rejouer=useCallback(()=>{                          // mot manque
+    const c=cur_.current;if(!c)return;
+    const n=(manques.current[c.id]??0)+1;manques.current[c.id]=n;
+    const r=res.current;r[c.id]=(r[c.id]??3)-1;
+    if(n<2){qr.current=[...qr.current,c];setQueue([...qr.current]);}  // une seule seconde chance
+    else{r[c.id]=0;}                                                  // deuxieme manque : sans etoile, on passe
+    setPaused(true);setTimeout(()=>{setPaused(false);suivant();},400);
+  },[suivant]);
+
+  useEffect(()=>{
+    if(done)return;
+    const boucle=t=>{
+      if(!last.current)last.current=t;
+      const dt=Math.min(48,t-last.current);last.current=t;
+      if(!paused){
+        let fini=false,rate=false;
+        const nx=items_.current.map(o=>({...o,y:o.y+spd.current*dt*0.1})).filter(o=>{
+          if(o.y>=86&&o.y<=100){                            // hauteur du panier
+            const dx=Math.abs(o.x-cr.current);
+            if(dx<11){ o.bon?fini=true:rate=true; return false; }
+          }
+          if(o.y>102){ if(o.bon)rate=false; return false; }  // touche le sol
+          return true;
+        });
+        items_.current=nx;setItems(nx);
+        if(fini){etoile(cur_.current.id,3-Math.max(0,(3-(res.current[cur_.current.id]??3))));attrape();}
+        else if(rate){perdreVie();}
+        else if(nx.length===0&&cur_.current){rejouer();}     // le bon mot est tombe
+      }
+      raf.current=requestAnimationFrame(boucle);
+    };
+    raf.current=requestAnimationFrame(boucle);
+    return()=>{if(raf.current)cancelAnimationFrame(raf.current);last.current=0;};
+  },[done,paused,attrape,perdreVie,rejouer]);
+
+  useEffect(()=>{
+    const k=e=>{
+      if(e.key==="ArrowLeft"){cr.current=Math.max(6,cr.current-7);setCart(cr.current);}
+      if(e.key==="ArrowRight"){cr.current=Math.min(94,cr.current+7);setCart(cr.current);}
+    };
+    window.addEventListener("keydown",k);return()=>window.removeEventListener("keydown",k);
+  },[]);
+
+  const bouger=e=>{
+    const r=zone.current?.getBoundingClientRect();if(!r)return;
+    const x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+    cr.current=Math.max(6,Math.min(94,(x/r.width)*100));setCart(cr.current);
+  };
+
+  useEffect(()=>{
+    if(!done)return;
+    setTimeout(()=>onFinish(pairs.map(p=>{const v=res.current[p.id];
+      return{id:p.id,stars:v===undefined?1:v>=3?3:v>=2?2:v>=1?1:0};})),500);
+  },[done]);
+
+  const fond=flash==="ok"?C.greenLight:flash==="rate"?C.redLight:"transparent";
+  return <div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+      <span style={{fontSize:15}}>{"❤️".repeat(Math.max(0,lives))}</span>
+      <span style={{fontSize:13,fontWeight:700,color:C.ink}}>⭐ {score}</span>
+    </div>
+    <p style={{textAlign:"center",fontSize:11,color:C.muted,letterSpacing:1,margin:"0 0 4px"}}>ATTRAPE LA TRADUCTION DE</p>
+    <p style={{textAlign:"center",fontSize:22,fontWeight:800,color:C.blue,margin:"0 0 10px"}}>{cur?cur.l:"…"}</p>
+    <div ref={zone} onMouseMove={bouger} onTouchMove={bouger}
+      style={{position:"relative",height:340,borderRadius:C.radiusSm,overflow:"hidden",
+        background:`linear-gradient(${C.sky2},${C.sky3})`,cursor:"none",touchAction:"none",
+        boxShadow:`inset 0 0 0 9999px ${fond}`,transition:"box-shadow .2s"}}>
+      {items.map(o=><div key={o.key} style={{position:"absolute",left:o.x+"%",top:o.y+"%",
+        transform:"translate(-50%,-50%)",background:C.white,border:`2px solid ${C.cardBorder}`,
+        borderRadius:8,padding:"4px 11px",fontSize:13,fontWeight:700,color:C.ink,whiteSpace:"nowrap"}}>{o.texte}</div>)}
+      <div style={{position:"absolute",left:cart+"%",bottom:22,transform:"translateX(-50%)",
+        width:74,height:30,background:"#8d6e63",border:"2px solid #5d4037",borderTop:"none",borderRadius:"0 0 12px 12px"}}/>
+      <div style={{position:"absolute",left:cart+"%",bottom:50,transform:"translateX(-50%)",
+        width:74,height:7,background:"#a1887f",border:"2px solid #5d4037",borderRadius:5}}/>
+      <div style={{position:"absolute",left:0,right:0,bottom:0,height:18,background:C.ground,borderTop:`3px solid ${C.groundDark}`}}/>
+    </div>
+    <p style={{textAlign:"center",fontSize:11,color:C.muted,margin:"8px 0 0"}}>← → ou glisse le doigt pour déplacer le panier</p>
+  </div>;
+}
+
 const GAMES=[
   {id:"memory",icon:"🃏",name:"Memory",desc:"Associer les paires en retournant les cartes",min:2,color:C.blue,arcade:false},
   {id:"flashcards",icon:"🎴",name:"Flashcards",desc:"Retourner la carte et tester ses connaissances",min:1,color:C.purple,arcade:false},
@@ -637,8 +767,9 @@ const GAMES=[
   {id:"breaker",icon:"🧱",name:"Word Breaker",desc:"Casse les briques pour libérer les lettres !",min:1,color:C.red,arcade:true},
   {id:"maze",icon:"👻",name:"Vocab Maze",desc:"Ramasse les lettres sans te faire attraper !",min:1,color:C.purple,arcade:true},
   {id:"whack",icon:"🔨",name:"Whack-a-Word",desc:"Tape la bonne taupe avant qu'elle disparaisse !",min:3,color:C.orange,arcade:true},
+  {id:"catcher",icon:"🧺",name:"Word Catcher",desc:"Attrape la bonne traduction avant qu'elle tombe !",min:4,color:C.blue,arcade:true},
 ];
-const GM={memory:GameMemory,flashcards:GameFlashcards,pendu:GamePendu,wordguess:GameWordGuess,"mots-meles":GameMotsMeles,rush:GameWordRush,breaker:GameWordBreaker,maze:GameVocabMaze,whack:GameWhack};
+const GM={memory:GameMemory,flashcards:GameFlashcards,pendu:GamePendu,wordguess:GameWordGuess,"mots-meles":GameMotsMeles,rush:GameWordRush,breaker:GameWordBreaker,maze:GameVocabMaze,whack:GameWhack,catcher:GameWordCatcher};
 
 /* ═══════════ LIST EDITOR ═══════════ */
 const parseBulk=text=>{const seps=["\t",";","→","=","–",":"];
@@ -806,6 +937,36 @@ function App(){
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"><\/script>
 </head><body><div id="root"></div>
+<div id="ll-fallback" style="display:none;min-height:100vh;background:linear-gradient(#4fc3f7,#81d4fa 55%,#b3e5fc);font-family:'Segoe UI',system-ui,sans-serif;padding:60px 16px;">
+<div style="background:rgba(255,255,255,0.92);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);padding:28px 24px;max-width:430px;margin:0 auto;text-align:center;">
+<svg viewBox="0 0 32 32" width="48" height="48" style="display:block;margin:0 auto;opacity:.5"><rect x="6" y="4" width="20" height="8" rx="3" fill="#b0bec5" stroke="#90a4ae" stroke-width="1.5"/><rect x="9" y="12" width="14" height="18" rx="2" fill="#cfd8dc" stroke="#b0bec5" stroke-width="1.5"/><rect x="6" y="4" width="20" height="3" rx="1.5" fill="#eceff1"/></svg>
+<p style="font-size:18px;font-weight:800;color:#37474f;margin:12px 0 4px;">The Loom Arcade n'a pas pu démarrer</p>
+<p style="font-size:13.5px;color:#78909c;line-height:1.6;margin:0 0 16px;">Cette application a besoin d'une connexion Internet pour s'ouvrir, même depuis un fichier téléchargé.</p>
+<div style="background:#fff3e0;border-left:3px solid #ff9800;padding:10px 13px;text-align:left;margin-bottom:18px;"><p style="margin:0;font-size:12.5px;color:#78909c;line-height:1.55;">Vérifiez votre connexion et rechargez la page. Si vous êtes dans un établissement, le réseau bloque peut-être les services externes.</p></div>
+<span id="ll-reload" style="display:inline-block;background:#37474f;padding:9px 12px 11px;border-radius:6px;cursor:pointer;box-shadow:0 4px 0 #1c262b;transition:transform .08s ease,box-shadow .08s ease;"><span style="display:inline-block;background:#2196f3;color:#fff;border-radius:20px;padding:6px 22px;font-size:12px;font-weight:800;letter-spacing:.14em;box-shadow:inset 0 -2px 0 rgba(0,0,0,.35);">RECHARGER</span></span>
+</div></div>
+<script>
+(function(){
+  var box=document.getElementById('ll-fallback'),btn=document.getElementById('ll-reload'),root=document.getElementById('root');
+  btn.onclick=function(){location.reload();};
+  btn.onmousedown=btn.ontouchstart=function(){btn.style.transform='translateY(3px)';btn.style.boxShadow='0 1px 0 #1c262b';};
+  btn.onmouseup=btn.onmouseleave=btn.ontouchend=function(){btn.style.transform='';btn.style.boxShadow='0 4px 0 #1c262b';};
+  function demarree(){return root && root.children.length>0;}       // l'application a construit quelque chose
+  function outilsCharges(){return !!(window.React&&window.ReactDOM&&window.Babel);}
+  function montrer(){root.style.display='none';box.style.display='block';}
+  function surveiller(){
+    var t=0,max=16,id=setInterval(function(){                       // grace de 4 s apres le chargement
+      if(demarree()){clearInterval(id);return;}                     // tout va bien : on ne montre rien, jamais
+      if(++t>=max){
+        clearInterval(id);
+        if(!demarree()&&!outilsCharges())montrer();                 // etat constate : programmes absents
+      }
+    },250);
+  }
+  if(document.readyState==='complete')surveiller();
+  else window.addEventListener('load',surveiller);
+})();
+<\/script>
 <script type="text/babel" data-type="module">
 `+document.querySelector('script[type="text/babel"]').textContent+`
 <\/script>
@@ -936,6 +1097,36 @@ function App(){
 
 const rootEl = document.getElementById('root');
 ReactDOM.createRoot(rootEl).render(React.createElement(App));
+</script>
+<div id="ll-fallback" style="display:none;min-height:100vh;background:linear-gradient(#4fc3f7,#81d4fa 55%,#b3e5fc);font-family:'Segoe UI',system-ui,sans-serif;padding:60px 16px;">
+<div style="background:rgba(255,255,255,0.92);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);padding:28px 24px;max-width:430px;margin:0 auto;text-align:center;">
+<svg viewBox="0 0 32 32" width="48" height="48" style="display:block;margin:0 auto;opacity:.5"><rect x="6" y="4" width="20" height="8" rx="3" fill="#b0bec5" stroke="#90a4ae" stroke-width="1.5"/><rect x="9" y="12" width="14" height="18" rx="2" fill="#cfd8dc" stroke="#b0bec5" stroke-width="1.5"/><rect x="6" y="4" width="20" height="3" rx="1.5" fill="#eceff1"/></svg>
+<p style="font-size:18px;font-weight:800;color:#37474f;margin:12px 0 4px;">The Loom Arcade n'a pas pu démarrer</p>
+<p style="font-size:13.5px;color:#78909c;line-height:1.6;margin:0 0 16px;">Cette application a besoin d'une connexion Internet pour s'ouvrir, même depuis un fichier téléchargé.</p>
+<div style="background:#fff3e0;border-left:3px solid #ff9800;padding:10px 13px;text-align:left;margin-bottom:18px;"><p style="margin:0;font-size:12.5px;color:#78909c;line-height:1.55;">Vérifiez votre connexion et rechargez la page. Si vous êtes dans un établissement, le réseau bloque peut-être les services externes.</p></div>
+<span id="ll-reload" style="display:inline-block;background:#37474f;padding:9px 12px 11px;border-radius:6px;cursor:pointer;box-shadow:0 4px 0 #1c262b;transition:transform .08s ease,box-shadow .08s ease;"><span style="display:inline-block;background:#2196f3;color:#fff;border-radius:20px;padding:6px 22px;font-size:12px;font-weight:800;letter-spacing:.14em;box-shadow:inset 0 -2px 0 rgba(0,0,0,.35);">RECHARGER</span></span>
+</div></div>
+<script>
+(function(){
+  var box=document.getElementById('ll-fallback'),btn=document.getElementById('ll-reload'),root=document.getElementById('root');
+  btn.onclick=function(){location.reload();};
+  btn.onmousedown=btn.ontouchstart=function(){btn.style.transform='translateY(3px)';btn.style.boxShadow='0 1px 0 #1c262b';};
+  btn.onmouseup=btn.onmouseleave=btn.ontouchend=function(){btn.style.transform='';btn.style.boxShadow='0 4px 0 #1c262b';};
+  function demarree(){return root && root.children.length>0;}       // l'application a construit quelque chose
+  function outilsCharges(){return !!(window.React&&window.ReactDOM&&window.Babel);}
+  function montrer(){root.style.display='none';box.style.display='block';}
+  function surveiller(){
+    var t=0,max=16,id=setInterval(function(){                       // grace de 4 s apres le chargement
+      if(demarree()){clearInterval(id);return;}                     // tout va bien : on ne montre rien, jamais
+      if(++t>=max){
+        clearInterval(id);
+        if(!demarree()&&!outilsCharges())montrer();                 // etat constate : programmes absents
+      }
+    },250);
+  }
+  if(document.readyState==='complete')surveiller();
+  else window.addEventListener('load',surveiller);
+})();
 </script>
 <div style="text-align:center;font-size:11px;color:#78909c;max-width:680px;margin:20px auto 0;opacity:0.6;padding-bottom:12px;">The Loom Arcade · Lesson Loom Suite © 2026 <a href="mailto:contact@lessonloom.fr" style="color:inherit;text-decoration:none;transition:color .15s" onmouseover="this.style.color='#2196f3'" onmouseout="this.style.color='inherit'">Maïwena Gadegbeku</a> — Licence AGPLv3</div>
 </body>

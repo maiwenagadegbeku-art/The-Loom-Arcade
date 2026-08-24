@@ -16,11 +16,11 @@ Ouvrir `the-loom-arcade.html` dans un navigateur. C'est tout.
 
 1. **Le prof** crée des listes de paires (ex: *dog → chien*)
 2. **Le prof** partage un lien vers une liste
-3. **L'élève** ouvre le lien et joue à 9 jeux différents avec cette liste
+3. **L'élève** ouvre le lien et joue à 10 jeux différents avec cette liste
 
 ---
 
-## 9 jeux
+## 10 jeux
 
 ### Classiques
 
@@ -40,6 +40,9 @@ Ouvrir `the-loom-arcade.html` dans un navigateur. C'est tout.
 | 🧱 **Word Breaker** | Casse-briques — casse les lettres dans l'ordre pour former le mot |
 | 👻 **Vocab Maze** | Ramasse les lettres sur une grille en évitant le fantôme |
 | 🔨 **Whack-a-Word** | Tape la bonne taupe avant qu'elle disparaisse |
+| 🧺 **Word Catcher** | Attrape la bonne traduction française avant qu'elle touche le sol |
+
+Neuf jeux vont du français vers l'anglais. **Word Catcher fait l'inverse** : le mot anglais est affiché, l'élève attrape sa traduction française — un travail de compréhension, quand les autres exercent la production.
 
 ---
 
@@ -55,6 +58,14 @@ Ouvrir `the-loom-arcade.html` dans un navigateur. C'est tout.
 - Écran récap coloré avec grille de maîtrise par mot
 - Bouton **"Rejouer les ratés"** pour relancer uniquement les mots ≤ 1 étoile
 - **Bilan de session** cumulé (remis à zéro si on quitte la page)
+
+### Word Catcher — le sens inverse
+Le mot anglais reste affiché en haut ; quatre traductions tombent du ciel, une seule est la bonne, les autres sont tirées de votre propre liste. L'élève déplace un panier aux flèches ou au doigt.
+
+- Attraper le bon mot fait passer au suivant ; attraper un mauvais coûte une vie, sur les trois disponibles
+- Laisser tomber le bon mot ne coûte pas de vie : il revient **une fois**, puis il est compté sans étoile
+- La vitesse augmente d'un cran tous les cinq mots réussis, jusqu'à un plafond
+- **Quatre paires minimum** dans la liste, puisqu'il faut une bonne réponse et trois leurres crédibles
 
 ### Guide d'accueil
 Un guide s'affiche au premier lancement côté professeur : créer une liste, jouer, partager par fichier ou par lien, prévisualiser en mode élève. Il ne réapparaît plus ensuite, et reste accessible par le bouton **Guide** de la barre du haut. Les élèves arrivant par un lien partagé ne le voient jamais.
