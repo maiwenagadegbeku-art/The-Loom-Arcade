@@ -53,6 +53,12 @@ La plupart des jeux demandent de retrouver le mot anglais. **Word Catcher fait l
 - Séparateurs reconnus : `tab` `;` `:` `→` `=` `–` ou 2+ espaces
 - Saisie manuelle aussi disponible (champ par champ)
 
+> **Un conseil sur le côté anglais : préférez un seul mot.**
+>
+> Quatre jeux — Word Guess, Mots mêlés, Vocab Maze et Word Breaker — font construire le mot lettre par lettre. Ils retirent les espaces : `a dog` y devient `ADOG`, et l'élève voit une orthographe qui n'existe pas.
+>
+> Écrivez donc `dog → chien` plutôt que `a dog → un chien`. Pour un verbe à particule ou une expression figée — `get up`, `look after`, `a lot of` — l'espace est inévitable : ces entrées restent parfaites pour Memory, Flashcards, Word Rush, Whack-a-Word, Word Catcher et le pendu, qui les affichent en entier. Évitez simplement de les envoyer aux quatre jeux de lettres.
+
 ### Scoring
 - **3 étoiles par mot** (critères adaptés par jeu)
 - Écran récap coloré avec grille de maîtrise par mot
@@ -85,6 +91,7 @@ Le lien de partage encode la liste en base64 dans l'URL (`#shared=...`). Aucun s
 
 - **Une connexion Internet est nécessaire à chaque ouverture**, y compris pour un fichier téléchargé. Sans connexion, la page reste blanche.
 - **Certains réseaux d'établissement filtrent les services externes** : testez depuis votre poste avant de diffuser à vos élèves.
+- **Les entrées à plusieurs mots sont mal rendues dans quatre jeux** : Word Guess, Mots mêlés, Vocab Maze et Word Breaker suppriment les espaces, ce qui transforme `get up` en `GETUP`. Le pendu, lui, conserve l'espace correctement. Les cinq autres jeux affichent le mot entier.
 - **Au-delà d'une cinquantaine de paires**, le lien de partage devient très long — environ 3 000 caractères pour 50 paires, 6 200 pour 100 — et certaines messageries ou ENT le coupent. Un lien coupé donne une liste vide : préférez alors le fichier téléchargé.
 
 ---
