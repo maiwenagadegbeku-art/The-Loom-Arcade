@@ -46,6 +46,10 @@ Ouvrir `the-loom-arcade.html` dans un navigateur. C'est tout.
 
 La plupart des jeux demandent de retrouver le mot anglais. **Word Catcher fait l'inverse** : le mot anglais est affiché, l'élève attrape sa traduction française — un travail de compréhension, quand les autres exercent la production.
 
+**Expressions de plusieurs mots** — espaces, apostrophes et traits d'union s'affichent dans tous les jeux : `get up`, `don't`, `well-known`. L'élève ne tape que les lettres.
+
+Dans **Word Guess**, si la liste mêle mots courts et longues expressions, l'élève choisit avant de jouer : les mots courts seulement (12 lettres maximum, sans compter espaces et signes), ou tous. La grille s'adapte à la largeur de l'écran ; sur téléphone, les longues expressions deviennent difficiles à lire.
+
 ---
 
 ## Fonctionnalités
@@ -102,6 +106,19 @@ Un guide s'affiche au premier lancement côté professeur : créer une liste, jo
 - Bouton 👁️ pour prévisualiser en mode élève
 - Bouton 🔗 pour copier le lien de partage
 
+### Ranger et retrouver ses listes
+- **Recherche** : un champ en haut de « Mes listes » filtre en direct, dans les titres **et dans les mots** des listes, sans tenir compte des accents. Le mot trouvé passe en tête des étiquettes de la carte, en jaune.
+- **Archives** : le bouton 🗄️ range une liste terminée dans la section « Archives », repliée en bas de page ; ↩️ la ressort. Une liste archivée garde ses liens et ses fichiers élèves : seul son affichage change.
+- La corbeille 🗑️ demande confirmation avant de supprimer une liste.
+
+### Sauvegarder et échanger ses listes
+Les listes sont enregistrées dans le navigateur, pas dans le fichier. Elles restent en place tant qu'on ouvre l'Arcade au même endroit, avec le même navigateur.
+
+- **⬇️ Exporter** : on coche les listes voulues et l'on obtient un fichier `.json`. Tout cocher, c'est une sauvegarde complète ; une ou deux listes, c'est un fichier à envoyer à une collègue.
+- **⬆️ Importer** : l'écran montre ce que contient le fichier avant d'accepter. Les listes importées **s'ajoutent** aux siennes, rien n'est remplacé ; une liste dont le nom existe déjà reçoit la mention « (importée) ». Les listes archivées reviennent archivées.
+
+Le fichier exporté ne s'ouvre que dans The Loom Arcade.
+
 ### Partage
 
 **Le fichier (bouton 📥)** — un fichier HTML se télécharge avec votre liste déjà dedans.
@@ -119,7 +136,6 @@ courte, fragile au-delà (voir Limites).
 
 - **Une connexion Internet est nécessaire à chaque ouverture**, y compris pour un fichier téléchargé. Sans connexion, la page reste blanche.
 - **Certains réseaux d'établissement filtrent les services externes** : testez depuis votre poste avant de diffuser à vos élèves.
-- **Les entrées à plusieurs mots sont mal rendues dans quatre jeux** : Word Guess, Mots mêlés, Vocab Maze et Word Breaker suppriment les espaces, ce qui transforme `get up` en `GETUP`. Le pendu, lui, conserve l'espace correctement. Les cinq autres jeux affichent le mot entier.
 - **Au-delà d'une cinquantaine de paires**, le lien de partage devient très long — environ 3 000 caractères pour 50 paires, 6 200 pour 100 — et certaines messageries ou ENT le coupent. Un lien coupé donne une liste vide : préférez alors le fichier téléchargé.
 
 ---

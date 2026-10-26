@@ -138,14 +138,14 @@ function GameMemory({pairs,onFinish}){
 function GamePendu({pairs,onFinish}){
   const sh=useMemo(()=>shuffle(pairs),[pairs]);const[idx,setIdx]=useState(0);const[guessed,setGuessed]=useState(new Set());const[errors,setErrors]=useState(0);
   const[results,setResults]=useState([]);const[showR,setShowR]=useState(false);const mx=6;
-  const cur=sh[idx],word=cur.l.toUpperCase();const disp=word.split("").map(ch=>/[A-ZÀ-Ÿ']/.test(ch)?(guessed.has(ch)?ch:"_"):ch);
+  const cur=sh[idx],word=cur.l.toUpperCase();const disp=word.split("").map(ch=>/[A-ZÀ-Ÿ]/.test(ch)?(guessed.has(ch)?ch:"_"):ch);
   const won=disp.every(ch=>ch!=="_"),lost=errors>=mx;
   useEffect(()=>{if((won||lost)&&!showR){setShowR(true);setResults(r=>[...r,{id:cur.id,stars:lost?0:errors===0?3:errors<=2?2:1}]);}},[won,lost,showR]);
   const guess=ch=>{if(won||lost)return;const u=ch.toUpperCase();if(guessed.has(u))return;setGuessed(new Set([...guessed,u]));if(!word.includes(u))setErrors(e=>e+1);};
   const next=()=>{if(idx<sh.length-1){setIdx(i=>i+1);setGuessed(new Set());setErrors(0);setShowR(false);}else onFinish(results);};
   const alpha="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
   return <div style={{textAlign:"center"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:14,alignItems:"center"}}><span style={{color:C.blue,fontSize:13,fontWeight:700}}>Mot {idx+1}/{sh.length}</span><span style={{fontSize:16}}>{Array(mx).fill(0).map((_,i)=>i<mx-errors?"❤️":"🤍").join("")}</span></div>
-    <div style={{background:C.skyPale,borderRadius:C.radius,padding:24,marginBottom:16,border:`2px solid ${C.sky3}`}}><p style={{color:C.coinDark,fontSize:14,margin:"0 0 12px",fontWeight:600}}>💡 {cur.r}</p><div style={{fontSize:32,letterSpacing:8,fontWeight:800,fontFamily:"monospace",color:C.ink}}>{disp.join(" ")}</div></div>
+    <div style={{background:C.skyPale,borderRadius:C.radius,padding:24,marginBottom:16,border:`2px solid ${C.sky3}`}}><p style={{color:C.coinDark,fontSize:14,margin:"0 0 12px",fontWeight:600}}>💡 {cur.r}</p><div style={{fontSize:32,letterSpacing:8,fontWeight:800,fontFamily:"monospace",color:C.ink,whiteSpace:"pre-wrap"}}>{disp.map(ch=>ch===" "?"":ch).join(" ")}</div></div>
     {showR?<div style={{marginBottom:16}}><p style={{fontSize:20,fontWeight:700,color:won?C.green:C.red}}>{won?"✓ Bien joué !":"✗ "+cur.l}</p><Btn color={idx<sh.length-1?C.blue:C.coinDark} onClick={next}>{idx<sh.length-1?"Suivant →":"Voir le récap"}</Btn></div>
     :<div style={{display:"flex",flexWrap:"wrap",gap:6,justifyContent:"center"}}>{alpha.map(ch=>{const u=guessed.has(ch),inW=word.includes(ch);
       return <button key={ch} onClick={()=>guess(ch)} disabled={u} style={{width:40,height:40,borderRadius:10,border:`2px solid ${u?(inW?C.green:C.red):C.sky3}`,background:u?(inW?C.greenLight:C.redLight):"#fff",color:u?(inW?C.green:C.red):C.ink,fontSize:15,fontWeight:700,cursor:u?"default":"pointer",fontFamily:C.font,boxShadow:u?"none":"0 2px 0 rgba(0,0,0,0.08)"}}>{ch}</button>;})}</div>}
@@ -154,10 +154,13 @@ function GamePendu({pairs,onFinish}){
 
 /* ═══════════ GAME: WORD GUESS (Wordle-style) ═══════════ */
 function GameWordGuess({pairs,onFinish}){
-  const sh=useMemo(()=>shuffle(pairs),[pairs]);
+  const shortPairs=useMemo(()=>pairs.filter(p=>p.l.toUpperCase().replace(/[^A-ZÀ-Ÿ]/g,"").length<=12),[pairs]);
+  const needChoice=shortPairs.length>0&&shortPairs.length<pairs.length;
+  const[mode,setMode]=useState(needChoice?null:"all");
+  const sh=useMemo(()=>shuffle(mode==="short"?shortPairs:pairs),[pairs,mode]);
   const[idx,setIdx]=useState(0);const[guesses,setGuesses]=useState([]);const[current,setCurrent]=useState("");
   const[result,setResult]=useState(null);const[results,setResults]=useState([]);
-  const maxTries=6;const cur=sh[idx];const word=cur.l.toUpperCase().replace(/[^A-ZÀ-Ÿ]/g,"");
+  const maxTries=6;const cur=sh[idx];const word=cur.l.toUpperCase().replace(/[^A-ZÀ-Ÿ]/g,"");const wgS=cur.l.toUpperCase().split("").filter(c=>!/[A-ZÀ-Ÿ]/.test(c)).length;const wgB=word.length*36+wgS*16+Math.max(0,word.length+wgS-1)*4;
   const kbRows=[["A","Z","E","R","T","Y","U","I","O","P"],["Q","S","D","F","G","H","J","K","L","M"],["⌫","W","X","C","V","B","N","↵"]];
 
   const submit=()=>{
@@ -169,10 +172,10 @@ function GameWordGuess({pairs,onFinish}){
   const tapKey=k=>{if(result)return;if(k==="↵"){submit();}else if(k==="⌫"){setCurrent(c=>c.slice(0,-1));}else if(current.length<word.length){setCurrent(c=>c+k);}};
   const next=()=>{if(idx<sh.length-1){setIdx(i=>i+1);setGuesses([]);setCurrent("");setResult(null);}else onFinish(results);};
 
-  useEffect(()=>{const handler=e=>{if(result)return;
+  useEffect(()=>{const handler=e=>{if(result||mode===null)return;
     if(e.key==="Enter")submit();else if(e.key==="Backspace")setCurrent(c=>c.slice(0,-1));
     else{const k=e.key.toUpperCase();if(/^[A-ZÀ-Ÿ]$/.test(k)&&current.length<word.length)setCurrent(c=>c+k);}};
-    window.addEventListener("keydown",handler);return()=>window.removeEventListener("keydown",handler);},[current,result,guesses]);
+    window.addEventListener("keydown",handler);return()=>window.removeEventListener("keydown",handler);},[current,result,guesses,mode]);
 
   const getCellColor=(guess,li)=>{
     const ch=guess[li];if(word[li]===ch)return{bg:C.green,c:"#fff"};
@@ -188,16 +191,25 @@ function GameWordGuess({pairs,onFinish}){
   const getKeyBg=k=>{const s=keyColors[k];return s==="green"?C.green:s==="yellow"?C.coin:s==="gray"?"#90a4ae":"#e0e0e0";};
   const getKeyC=k=>{const s=keyColors[k];return s==="green"||s==="gray"?"#fff":C.ink;};
 
+  if(mode===null)return <div style={{textAlign:"center"}}>
+    <p style={{color:C.ink,fontSize:16,fontWeight:700,marginBottom:16}}>Quels mots jouer ?</p>
+    <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
+      <Btn color={C.blue} onClick={()=>setMode("short")}>Mots courts ({shortPairs.length})</Btn>
+      <Btn color={C.green} onClick={()=>setMode("all")}>Tous ({pairs.length})</Btn>
+    </div>
+    <p style={{color:C.muted,fontSize:12,marginTop:14}}>12 lettres maximum</p>
+  </div>;
+
   return <div style={{textAlign:"center"}}>
     <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><span style={{color:C.blue,fontSize:13,fontWeight:700}}>Mot {idx+1}/{sh.length}</span><span style={{color:C.orange,fontSize:13,fontWeight:700}}>{guesses.length}/{maxTries}</span></div>
     <p style={{color:C.coinDark,fontSize:14,margin:"0 0 12px",fontWeight:600}}>💡 {cur.r} <span style={{color:C.muted,fontSize:12}}>({word.length} lettres)</span></p>
     {/* Grid */}
     <div style={{display:"flex",flexDirection:"column",gap:5,alignItems:"center",marginBottom:16}}>
       {Array(maxTries).fill(0).map((_,ri)=>{const g=guesses[ri];const isActive=ri===guesses.length&&!result;
-        return <div key={ri} style={{display:"flex",gap:4}}>
-          {Array(word.length).fill(0).map((_,li)=>{const ch=g?g[li]:isActive?(current[li]||""):"";
+        return <div key={ri} style={{display:"flex",gap:4,width:"100%",justifyContent:"center",containerType:"inline-size"}}>
+          {(()=>{let k=0;return cur.l.toUpperCase().split("").map((sc,j)=>{if(!/[A-ZÀ-Ÿ]/.test(sc))return <div key={"x"+j} style={{flex:"0 1 16px",minWidth:0,display:"flex",alignItems:"center",justifyContent:"center",color:C.muted,fontWeight:800,fontSize:`min(19px, ${(1900/wgB).toFixed(3)}cqi)`,fontFamily:"monospace"}}>{sc===" "?"":sc}</div>;const li=k++;const ch=g?g[li]:isActive?(current[li]||""):"";
             const sty=g?getCellColor(g,li):{bg:isActive&&ch?"#fff":"#eceff1",c:C.ink};
-            return <div key={li} style={{width:36,height:40,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:6,background:sty.bg,color:sty.c,fontWeight:800,fontSize:17,fontFamily:"monospace",border:`2px solid ${g?sty.bg:isActive?C.blue:"#cfd8dc"}`,transition:"all .15s"}}>{ch}</div>;})}
+            return <div key={li} style={{flex:"0 1 36px",minWidth:0,aspectRatio:"36 / 40",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:6,background:sty.bg,color:sty.c,fontWeight:800,fontSize:`min(17px, ${(1700/wgB).toFixed(3)}cqi)`,fontFamily:"monospace",border:`2px solid ${g?sty.bg:isActive?C.blue:"#cfd8dc"}`,transition:"all .15s"}}>{ch}</div>;});})()}
         </div>;})}
     </div>
     {result?<div><p style={{fontSize:20,fontWeight:700,color:result==="win"?C.green:C.red}}>{result==="win"?"✓ Correct !":"✗ "+cur.l}</p>
@@ -241,7 +253,7 @@ function GameMotsMeles({pairs:allPairs,onFinish}){
 
   useEffect(()=>{if(!started)return;
     const g=Array.from({length:gs},()=>Array(gs).fill(""));const placed=[];
-    const words=pairs.map(p=>({word:p.l.toUpperCase().replace(/[^A-ZÀ-Ÿ]/g,""),id:p.id,hint:p.r})).sort((a,b)=>b.word.length-a.word.length);
+    const words=pairs.map(p=>({word:p.l.toUpperCase().replace(/[^A-ZÀ-Ÿ]/g,""),disp:p.l.toUpperCase(),id:p.id,hint:p.r})).sort((a,b)=>b.word.length-a.word.length);
     for(const w of words){let ok=false;for(let t=0;t<300&&!ok;t++){const d=dirs[Math.floor(Math.random()*8)],sr=Math.floor(Math.random()*gs),sc=Math.floor(Math.random()*gs);
       const cells=[];let fits=true;for(let k=0;k<w.word.length;k++){const r=sr+d[0]*k,c=sc+d[1]*k;if(r<0||r>=gs||c<0||c>=gs){fits=false;break;}if(g[r][c]!==""&&g[r][c]!==w.word[k]){fits=false;break;}cells.push([r,c]);}
       if(fits){cells.forEach(([r,c],k)=>{g[r][c]=w.word[k];});placed.push({...w,cells});ok=true;}}}
@@ -278,7 +290,7 @@ function GameMotsMeles({pairs:allPairs,onFinish}){
           return <button key={ck(r,c)} onClick={()=>handleCell(r,c)} style={{width:csz,height:csz,border:`2px solid ${isF?C.green:isS?C.blue:"transparent"}`,borderRadius:5,background:isF?C.greenLight:isS?`${C.blue}22`:"#fff",color:isF?C.green:isS?C.blue:C.ink,fontWeight:isF?800:600,fontSize:csz>30?13:10,cursor:"pointer",fontFamily:"monospace"}}>{ch}</button>;}))}
       </div>
       <div style={{minWidth:120}}><p style={{fontWeight:700,fontSize:12,margin:"0 0 8px",color:C.blue}}>Mots :</p>
-        {pls.map(p=><div key={p.id} style={{fontSize:11,marginBottom:3,padding:"3px 7px",borderRadius:6,background:found.has(p.id)?C.greenLight:"transparent",color:found.has(p.id)?C.green:C.ink,fontWeight:found.has(p.id)?700:400,textDecoration:found.has(p.id)?"line-through":"none"}}>{p.word} <span style={{color:C.muted,fontSize:9}}>({p.hint})</span></div>)}
+        {pls.map(p=><div key={p.id} style={{fontSize:11,marginBottom:3,padding:"3px 7px",borderRadius:6,background:found.has(p.id)?C.greenLight:"transparent",color:found.has(p.id)?C.green:C.ink,fontWeight:found.has(p.id)?700:400,textDecoration:found.has(p.id)?"line-through":"none"}}>{p.disp} <span style={{color:C.muted,fontSize:9}}>({p.hint})</span></div>)}
       </div>
     </div>
   </div>;
@@ -365,7 +377,9 @@ function GameWordBreaker({pairs,onFinish}){
             br.fading=true;
             const timer=setTimeout(()=>{
               br.fading=false;br.alive=true;
-              br.x=10+Math.floor(Math.random()*6)*15;br.y=8+Math.floor(Math.random()*3)*12;
+              const taken=new Set(bricksRef.current.filter(o=>o!==br&&o.alive).map(o=>o.x+"-"+o.y));
+              const free=[];for(let cx=0;cx<6;cx++)for(let cy=0;cy<3;cy++){const fx=10+cx*15,fy=8+cy*12;if(!taken.has(fx+"-"+fy))free.push([fx,fy]);}
+              if(free.length){const pick=free[Math.floor(Math.random()*free.length)];br.x=pick[0];br.y=pick[1];}
               setBricks([...bricksRef.current]);
             },2000);
             respawnTimers.current.push(timer);
@@ -388,7 +402,7 @@ function GameWordBreaker({pairs,onFinish}){
       <span>{Array(3).fill(0).map((_,i)=>i<lives?"❤️":"🤍").join("")}</span></div>
     <div style={{background:C.skyPale,borderRadius:C.radius,padding:"8px 12px",marginBottom:10,border:`2px solid ${C.sky3}`}}>
       <p style={{color:C.coinDark,fontSize:13,margin:"0 0 4px",fontWeight:600}}>💡 {cur.r}</p>
-      <div style={{display:"flex",gap:4,justifyContent:"center"}}>{word.split("").map((ch,i)=><span key={i} style={{width:28,height:32,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:6,background:i<collected.length?C.green:"#fff",color:i<collected.length?"#fff":C.sky3,fontWeight:800,fontSize:16,fontFamily:"monospace",border:`2px solid ${i<collected.length?C.green:i===collected.length?C.blue:C.sky3}`}}>{i<collected.length?collected[i]:"?"}</span>)}</div>
+      <div style={{display:"flex",gap:4,justifyContent:"center"}}>{(()=>{let k=0;return cur.l.toUpperCase().split("").map((ch,j)=>{if(!/[A-ZÀ-Ÿ]/.test(ch))return <span key={"x"+j} style={{width:ch===" "?14:16,height:32,display:"flex",alignItems:"center",justifyContent:"center",color:C.ink,fontWeight:800,fontSize:16,fontFamily:"monospace"}}>{ch===" "?"":ch}</span>;const i=k++;return <span key={j} style={{width:28,height:32,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:6,background:i<collected.length?C.green:"#fff",color:i<collected.length?"#fff":C.sky3,fontWeight:800,fontSize:16,fontFamily:"monospace",border:`2px solid ${i<collected.length?C.green:i===collected.length?C.blue:C.sky3}`}}>{i<collected.length?collected[i]:"?"}</span>;});})()}</div>
     </div>
     {result?<div style={{padding:24}}><p style={{fontSize:20,fontWeight:700,color:result==="win"?C.green:C.red}}>{result==="win"?"✓ Bravo !":"✗ "+cur.l}</p>
       <Btn color={idx<sh.length-1?C.blue:C.coinDark} onClick={next}>{idx<sh.length-1?"Suivant →":"Voir le récap"}</Btn></div>
@@ -465,7 +479,7 @@ function GameVocabMaze({pairs,onFinish}){
     <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><span style={{color:C.blue,fontSize:13,fontWeight:700}}>Mot {idx+1}/{sh.length}</span></div>
     <div style={{background:C.skyPale,borderRadius:C.radius,padding:"8px 12px",marginBottom:10,border:`2px solid ${C.sky3}`}}>
       <p style={{color:C.coinDark,fontSize:13,margin:"0 0 4px",fontWeight:600}}>💡 {cur.r} — Cherche : <span style={{color:C.blue,fontWeight:800}}>{nextCh||"✓"}</span></p>
-      <div style={{display:"flex",gap:3,justifyContent:"center"}}>{word.split("").map((ch,i)=><span key={i} style={{width:24,height:28,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:5,background:i<collected.length?C.green:i===collected.length?C.coin:"#fff",color:i<collected.length?"#fff":C.ink,fontWeight:800,fontSize:14,fontFamily:"monospace",border:`2px solid ${i<collected.length?C.green:i===collected.length?C.coinDark:"#ccc"}`}}>{i<collected.length?collected[i]:""}</span>)}</div>
+      <div style={{display:"flex",gap:3,justifyContent:"center"}}>{(()=>{let k=0;return cur.l.toUpperCase().split("").map((ch,j)=>{if(!/[A-ZÀ-Ÿ]/.test(ch))return <span key={"x"+j} style={{width:ch===" "?12:14,height:28,display:"flex",alignItems:"center",justifyContent:"center",color:C.ink,fontWeight:800,fontSize:14,fontFamily:"monospace"}}>{ch===" "?"":ch}</span>;const i=k++;return <span key={j} style={{width:24,height:28,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:5,background:i<collected.length?C.green:i===collected.length?C.coin:"#fff",color:i<collected.length?"#fff":C.ink,fontWeight:800,fontSize:14,fontFamily:"monospace",border:`2px solid ${i<collected.length?C.green:i===collected.length?C.coinDark:"#ccc"}`}}>{i<collected.length?collected[i]:""}</span>;});})()}</div>
     </div>
     {result?<div style={{padding:24}}><p style={{fontSize:20,fontWeight:700,color:result==="win"?C.green:C.red}}>{result==="win"?"✓ Échappé !":"👻 Attrapé ! → "+cur.l}</p>
       <Btn color={idx<sh.length-1?C.blue:C.coinDark} onClick={next}>{idx<sh.length-1?"Suivant →":"Voir le récap"}</Btn></div>
@@ -889,12 +903,55 @@ function Guide({onClose}){
 }
 
 function App(){
+  const[sharedInit]=useState(()=>{try{const h=window.location.hash?.slice(1);if(h&&h.startsWith("shared="))return decodeList(h.replace("shared=",""));}catch(e){}return null;});
   const[lists,setLists]=useState([]);const[loaded,setLoaded]=useState(false);
-  const[view,setView]=useState("home");const[editList,setEditList]=useState(null);
-  const[activeList,setActiveList]=useState(null);const[activeGame,setActiveGame]=useState(null);
+  const[view,setView]=useState(sharedInit?"pick":"home");const[editList,setEditList]=useState(null);
+  const[activeList,setActiveList]=useState(sharedInit?{id:"shared",name:sharedInit.name,pairs:sharedInit.pairs}:null);const[activeGame,setActiveGame]=useState(null);
   const[recapData,setRecapData]=useState(null);const[filterPairs,setFilterPairs]=useState(null);
-  const[isStudent,setIsStudent]=useState(false);const[isSharedLink,setIsSharedLink]=useState(false);const[copied,setCopied]=useState(false);
-  const[sessionLog,setSessionLog]=useState([]);const[showGuide,setShowGuide]=useState(false);/* {gameName,icon,listName,results,totalStars,maxStars,ts} */
+  const[isStudent,setIsStudent]=useState(!!sharedInit);const[isSharedLink,setIsSharedLink]=useState(!!sharedInit);const[copied,setCopied]=useState(false);
+  const[sessionLog,setSessionLog]=useState([]);const[showGuide,setShowGuide]=useState(false);
+  const[exportOpen,setExportOpen]=useState(false);const[exportSel,setExportSel]=useState(new Set());const[importData,setImportData]=useState(null);const[importErr,setImportErr]=useState("");const fileRef=useRef(null);
+  const[search,setSearch]=useState("");const[showArchives,setShowArchives]=useState(false);
+  const norm=s=>(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  const q=norm(search.trim());
+  const pairHit=pp=>q!==""&&(norm(pp.l).includes(q)||norm(pp.r).includes(q));
+  const listHit=l=>q===""||norm(l.name).includes(q)||l.pairs.some(pairHit);
+  const activeL=lists.filter(l=>!l.archived&&listHit(l));const archivedL=lists.filter(l=>l.archived&&listHit(l));
+  const archivedTotal=lists.filter(l=>l.archived).length;
+  const toggleArchive=id=>setLists(p=>p.map(l=>l.id===id?{...l,archived:!l.archived}:l));
+  const renderCard=l=>{const shown=q===""?l.pairs:[...l.pairs.filter(pairHit),...l.pairs.filter(pp=>!pairHit(pp))];
+    return <Card key={l.id} style={{padding:20,cursor:"pointer",opacity:l.archived?0.75:1}} onClick={()=>{setActiveList(l);setView("pick");}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"start",gap:10}}>
+                <h3 style={{fontSize:16,fontWeight:700,margin:0,minWidth:0,overflowWrap:"break-word"}}>{l.name}</h3>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(3,auto)",gap:"6px 9px",justifyItems:"center",flexShrink:0}} onClick={e=>e.stopPropagation()}>
+                  <span style={{cursor:"pointer",fontSize:14}} onClick={()=>{setActiveList(l);setIsStudent(true);setView("pick");}} title="Prévisualiser mode élève">👁️</span>
+                  <span style={{cursor:"pointer",fontSize:14}} onClick={()=>shareList(l)} title="Copier lien élève">🔗</span>
+                  <span style={{cursor:"pointer",fontSize:14}} onClick={()=>downloadList(l)} title="Télécharger HTML pour les élèves">📥</span>
+                  <span style={{cursor:"pointer",fontSize:14}} onClick={()=>setEditList(l)} title="Modifier">✏️</span>
+                  <span style={{cursor:"pointer",fontSize:14}} onClick={()=>toggleArchive(l.id)} title={l.archived?"Ressortir des archives":"Archiver"}>{l.archived?"↩️":"🗄️"}</span>
+                  <span style={{cursor:"pointer",fontSize:14}} onClick={()=>{if(window.confirm(`Supprimer définitivement la liste « ${l.name} » ?`))deleteList(l.id);}} title="Supprimer">🗑️</span>
+                </div>
+              </div>
+              <p style={{color:C.muted,fontSize:12,margin:"6px 0 0"}}>{l.pairs.length} paire{l.pairs.length>1?"s":""}</p>
+              <div style={{marginTop:10,display:"flex",flexWrap:"wrap",gap:4}}>
+                {shown.slice(0,5).map(pp=><span key={pp.id} style={{background:pairHit(pp)?C.coin:C.skyPale,borderRadius:12,padding:"2px 8px",fontSize:10,color:pairHit(pp)?C.ink:C.muted,fontWeight:pairHit(pp)?700:400}}>{pp.l}</span>)}
+                {l.pairs.length>5&&<span style={{color:C.muted,fontSize:10}}>+{l.pairs.length-5}</span>}
+              </div>
+            </Card>;};
+  const doExport=()=>{const sel=lists.filter(l=>exportSel.has(l.id));if(!sel.length)return;
+    const data={app:"the-loom-arcade",type:"lists",version:1,exported:new Date().toISOString(),lists:sel.map(l=>({name:l.name,pairs:l.pairs.map(p=>({l:p.l,r:p.r})),...(l.archived?{archived:true}:{})}))};
+    const slug=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40)||"liste";
+    const fname=sel.length===1?`arcade-${slug(sel[0].name)}.json`:`arcade-${sel.length}-listes-${new Date().toISOString().slice(0,10)}.json`;
+    const blob=new Blob([JSON.stringify(data,null,1)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");
+    a.href=url;a.download=fname;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);setExportOpen(false);};
+  const onImportFile=e=>{const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;setImportErr("");setImportData(null);
+    const rd=new FileReader();rd.onload=()=>{try{const dd=JSON.parse(rd.result);
+      if(!dd||dd.app!=="the-loom-arcade"||!Array.isArray(dd.lists))throw 0;
+      const ok=dd.lists.filter(l=>l&&typeof l.name==="string"&&Array.isArray(l.pairs)).map(l=>({name:l.name.trim()||"Liste importée",archived:l.archived===true,pairs:l.pairs.filter(q=>q&&typeof q.l==="string"&&typeof q.r==="string"&&q.l.trim()&&q.r.trim())})).filter(l=>l.pairs.length>0);
+      if(!ok.length)throw 0;setImportData(ok);}catch(err){setImportErr("Ce fichier n'est pas un export de The Loom Arcade.");}};rd.readAsText(f);};
+  const doImport=()=>{if(!importData)return;const t=Date.now();const names=new Set(lists.map(l=>l.name));
+    const add=importData.map((l,i)=>({id:t+i,name:names.has(l.name)?l.name+" (importée)":l.name,pairs:l.pairs.map((qq,j)=>({l:qq.l,r:qq.r,id:t+i*1000+j+1})),created:t,...(l.archived?{archived:true}:{})}));
+    setLists(p=>[...p,...add]);setImportData(null);};/* {gameName,icon,listName,results,totalStars,maxStars,ts} */
 
   useEffect(()=>{loadLists().then(l=>{setLists(l);setLoaded(true);});},[]);
   useEffect(()=>{const h=window.location.hash||"";if(h.includes("shared="))return;window.storage.get("guideSeen").then(r=>{if(!r)setShowGuide(true);});},[]);
@@ -1000,34 +1057,55 @@ function App(){
       {view==="home"&&!isStudent&&<>
         <div style={{textAlign:"center",padding:"36px 0 28px"}}><h1 style={{fontSize:34,fontWeight:800,margin:0,letterSpacing:"-0.5px",color:C.ink,display:"flex",alignItems:"center",justifyContent:"center",gap:10}}><PipeLogo/> The Loom <span style={{color:C.blue}}>Arcade</span></h1></div>
         {editList!==null?<ListEditor list={editList==="new"?null:editList} onSave={saveList} onCancel={()=>setEditList(null)}/>:<>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
             <h2 style={{fontSize:18,fontWeight:700,margin:0}}>📚 Mes listes</h2>
-            <Btn color={C.blue} onClick={()=>setEditList("new")}>+ Nouvelle liste</Btn>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              {lists.length>0&&<BtnOutline small color={C.blue} onClick={()=>{setImportData(null);setImportErr("");setExportSel(new Set(lists.map(l=>l.id)));setExportOpen(o=>!o);}}>⬇️ Exporter</BtnOutline>}
+              <BtnOutline small color={C.blue} onClick={()=>{setExportOpen(false);setImportErr("");fileRef.current&&fileRef.current.click();}}>⬆️ Importer</BtnOutline>
+              <input ref={fileRef} type="file" accept=".json,application/json" style={{display:"none"}} onChange={onImportFile}/>
+              <Btn color={C.blue} onClick={()=>setEditList("new")}>+ Nouvelle liste</Btn>
+            </div>
           </div>
+          {exportOpen&&<Card style={{padding:20,marginBottom:16}}>
+            <p style={{fontWeight:700,fontSize:15,margin:"0 0 10px"}}>Exporter des listes</p>
+            <label style={{display:"flex",gap:8,alignItems:"center",fontSize:13,fontWeight:700,marginBottom:8,cursor:"pointer"}}><input type="checkbox" checked={exportSel.size===lists.length} onChange={e=>setExportSel(e.target.checked?new Set(lists.map(l=>l.id)):new Set())}/>Tout cocher</label>
+            <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:240,overflowY:"auto",paddingLeft:18,marginBottom:12}}>
+              {lists.map(l=><label key={l.id} style={{display:"flex",gap:8,alignItems:"center",fontSize:13,cursor:"pointer"}}><input type="checkbox" checked={exportSel.has(l.id)} onChange={()=>setExportSel(s=>{const n=new Set(s);if(n.has(l.id))n.delete(l.id);else n.add(l.id);return n;})}/>{l.name} <span style={{color:C.muted,fontSize:11}}>({l.pairs.length}){l.archived?" · archivée":""}</span></label>)}
+            </div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn small color={C.blue} disabled={exportSel.size===0} onClick={doExport}>Exporter ({exportSel.size} liste{exportSel.size>1?"s":""})</Btn><BtnOutline small color={C.muted} onClick={()=>setExportOpen(false)}>Annuler</BtnOutline></div>
+            <p style={{color:C.muted,fontSize:12,margin:"10px 0 0"}}>Tout cocher = sauvegarde. Une ou deux = à envoyer à une collègue.</p>
+          </Card>}
+          {importErr&&<Card style={{padding:16,marginBottom:16,cursor:"pointer"}} onClick={()=>setImportErr("")}><p style={{color:C.red,fontWeight:700,fontSize:14,margin:0}}>{importErr}</p></Card>}
+          {importData&&<Card style={{padding:20,marginBottom:16}}>
+            <p style={{fontWeight:700,fontSize:15,margin:"0 0 8px"}}>Importer des listes</p>
+            <p style={{fontSize:13,margin:"0 0 8px"}}>{importData.length} liste{importData.length>1?"s":""} trouvée{importData.length>1?"s":""} dans le fichier</p>
+            <div style={{display:"flex",flexDirection:"column",gap:4,marginBottom:10}}>{importData.map((l,i)=><span key={i} style={{fontSize:13,color:C.muted}}>{l.name} · {l.pairs.length} paire{l.pairs.length>1?"s":""}</span>)}</div>
+            <p style={{fontSize:12,color:C.green,fontWeight:700,margin:"0 0 12px"}}>Elles s'ajoutent aux tiennes. Rien n'est remplacé.</p>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn small color={C.green} onClick={doImport}>Ajouter à mes listes</Btn><BtnOutline small color={C.muted} onClick={()=>setImportData(null)}>Annuler</BtnOutline></div>
+          </Card>}
           {lists.length===0&&<Card style={{textAlign:"center",padding:48}}>
             <div style={{fontSize:52,marginBottom:12}}>🎮</div>
             <p style={{color:C.muted,fontSize:15}}>Crée ta première liste de vocabulaire pour commencer.</p>
             <Btn color={C.blue} onClick={()=>setEditList("new")} style={{marginTop:12}}>+ Créer une liste</Btn>
           </Card>}
+          {lists.length>0&&<div style={{display:"flex",alignItems:"center",gap:8,background:"#fff",border:`2px solid ${C.sky3}`,borderRadius:30,padding:"8px 16px",marginBottom:14}}>
+            <span style={{fontSize:14}}>🔍</span>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher une liste ou un mot…" style={{flex:1,minWidth:0,border:"none",outline:"none",fontSize:14,fontFamily:C.font,background:"transparent",color:C.ink}}/>
+            {q!==""&&<span style={{fontSize:12,color:C.muted,whiteSpace:"nowrap"}}>{activeL.length+archivedL.length} liste{activeL.length+archivedL.length>1?"s":""} sur {lists.length}</span>}
+            {search!==""&&<span style={{cursor:"pointer",fontSize:14,color:C.muted}} onClick={()=>setSearch("")} title="Effacer">✕</span>}
+          </div>}
+          {q!==""&&activeL.length+archivedL.length===0&&<p style={{color:C.muted,fontSize:14,textAlign:"center",margin:"16px 0"}}>Aucune liste ne correspond.</p>}
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:12}}>
-            {lists.map(l=><Card key={l.id} style={{padding:20,cursor:"pointer"}} onClick={()=>{setActiveList(l);setView("pick");}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"start"}}>
-                <h3 style={{fontSize:16,fontWeight:700,margin:0}}>{l.name}</h3>
-                <div style={{display:"flex",gap:8}} onClick={e=>e.stopPropagation()}>
-                  <span style={{cursor:"pointer",fontSize:14}} onClick={()=>{setActiveList(l);setIsStudent(true);setView("pick");}} title="Prévisualiser mode élève">👁️</span>
-                  <span style={{cursor:"pointer",fontSize:14}} onClick={()=>shareList(l)} title="Copier lien élève">🔗</span>
-                  <span style={{cursor:"pointer",fontSize:14}} onClick={()=>downloadList(l)} title="Télécharger HTML pour les élèves">📥</span>
-                  <span style={{cursor:"pointer",fontSize:14}} onClick={()=>setEditList(l)} title="Modifier">✏️</span>
-                  <span style={{cursor:"pointer",fontSize:14}} onClick={()=>deleteList(l.id)} title="Supprimer">🗑️</span>
-                </div>
-              </div>
-              <p style={{color:C.muted,fontSize:12,margin:"6px 0 0"}}>{l.pairs.length} paire{l.pairs.length>1?"s":""}</p>
-              <div style={{marginTop:10,display:"flex",flexWrap:"wrap",gap:4}}>
-                {l.pairs.slice(0,5).map(p=><span key={p.id} style={{background:C.skyPale,borderRadius:12,padding:"2px 8px",fontSize:10,color:C.muted}}>{p.l}</span>)}
-                {l.pairs.length>5&&<span style={{color:C.muted,fontSize:10}}>+{l.pairs.length-5}</span>}
-              </div>
-            </Card>)}
+            {activeL.map(renderCard)}
           </div>
+          {archivedL.length>0&&<div style={{marginTop:18}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",padding:"10px 14px",background:"rgba(255,255,255,0.6)",borderRadius:12,color:C.muted,fontWeight:700,fontSize:14}} onClick={()=>setShowArchives(s=>!s)}>
+              <span>{showArchives||q!==""?"▾":"▸"}</span><span>🗄️ Archives ({q!==""?archivedL.length:archivedTotal})</span>
+            </div>
+            {(showArchives||q!=="")&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:12,marginTop:12}}>
+              {archivedL.map(renderCard)}
+            </div>}
+          </div>}
           {copied&&<div style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",background:C.green,color:"#fff",padding:"10px 24px",borderRadius:30,fontWeight:700,fontSize:14,boxShadow:C.shadowLg,zIndex:200}}>✓ Lien élève copié !</div>}
         </>}
       </>}
